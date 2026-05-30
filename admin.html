@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayTrack Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E50914;
+    --red-dark: #B20710;
+    --red-glow: rgba(229,9,20,0.35);
+    --bg: #141414;
+    --surface: #1f1f1f;
+    --border: #333;
+    --text: #e5e5e5;
+    --muted: #808080;
+    --green: #46d369;
+    --yellow: #f5c518;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: linear-gradient(180deg, rgba(0,0,0,.9) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: var(--font-display); font-size: 2rem; letter-spacing: 4px; color: var(--red); text-shadow: 0 0 24px var(--red-glow); }
+  .logo span { color: var(--text); }
+  .admin-badge {
+    font-family: var(--font-display); font-size: .8rem; letter-spacing: 3px;
+    color: var(--yellow); border: 1px solid rgba(245,197,24,.3);
+    padding: 4px 14px; border-radius: 2px; background: rgba(245,197,24,.06);
+  }
+
+  /* LOGIN */
+  #login-page {
+    display: flex; align-items: center; justify-content: center;
+    min-height: calc(100vh - 65px);
+  }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 48px 40px; width: 380px; max-width: 95vw;
+    text-align: center;
+  }
+  .login-icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .login-title { font-family: var(--font-display); font-size: 2rem; letter-spacing: 4px; margin-bottom: 8px; }
+  .login-sub { color: var(--muted); font-size: .82rem; letter-spacing: .5px; margin-bottom: 32px; }
+  .input-wrap { position: relative; margin-bottom: 16px; }
+  .input-wrap input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: .95rem;
+    padding: 12px 16px; border-radius: 2px; outline: none;
+    transition: border-color .15s; letter-spacing: 2px;
+  }
+  .input-wrap input:focus { border-color: var(--red); }
+  .login-btn {
+    width: 100%; background: var(--red); color: #fff; border: none;
+    font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 3px;
+    padding: 13px; border-radius: 2px; cursor: pointer; transition: background .2s;
+    margin-top: 8px;
+  }
+  .login-btn:hover { background: var(--red-dark); }
+  .login-error {
+    color: var(--red); font-size: .8rem; letter-spacing: .5px;
+    margin-top: 12px; display: none;
+  }
+  .login-error.show { display: block; }
+
+  /* DASHBOARD */
+  #dashboard-page { display: none; padding: 48px; }
+  #dashboard-page.active { display: block; }
+
+  .dash-header { margin-bottom: 40px; }
+  .dash-title { font-family: var(--font-display); font-size: 2.2rem; letter-spacing: 4px; }
+  .dash-sub { color: var(--muted); font-size: .82rem; margin-top: 6px; letter-spacing: .5px; }
+
+  /* Summary strip */
+  .summary-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; max-width: 560px; margin-bottom: 40px;
+  }
+  .sum-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 22px; }
+  .sum-label { font-size: .68rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .sum-val { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 1px; }
+  .sum-val.green { color: var(--green); }
+  .sum-val.red   { color: var(--red); }
+  .sum-val.white { color: var(--text); }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; max-width: 860px; }
+  .table-head {
+    display: grid; grid-template-columns: 2fr 1.4fr 1.4fr 1.4fr 1.6fr;
+    padding: 12px 24px; background: rgba(255,255,255,.03);
+    border-bottom: 1px solid var(--border);
+    font-size: .68rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase;
+  }
+  .user-row {
+    display: grid; grid-template-columns: 2fr 1.4fr 1.4fr 1.4fr 1.6fr;
+    padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,.04);
+    align-items: center; transition: background .15s;
+  }
+  .user-row:last-child { border-bottom: none; }
+  .user-row:hover { background: rgba(255,255,255,.02); }
+
+  .user-name-cell { display: flex; align-items: center; gap: 12px; }
+  .mini-avatar {
+    width: 36px; height: 36px; border-radius: 3px; background: var(--red);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 1.1rem; color: #fff; flex-shrink: 0;
+  }
+  .user-name { font-weight: 600; font-size: .9rem; }
+
+  .amount-cell { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 1px; color: var(--text); }
+
+  /* Toggle switch */
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle { position: relative; width: 46px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: rgba(229,9,20,.3);
+    border: 1px solid var(--red); border-radius: 24px; cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+  .slider::before {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--red); left: 3px; top: 3px;
+    transition: transform .2s, background .2s;
+  }
+  .toggle input:checked + .slider { background: rgba(70,211,105,.2); border-color: var(--green); }
+  .toggle input:checked + .slider::before { transform: translateX(22px); background: var(--green); }
+  .toggle-label { font-size: .75rem; font-weight: 600; letter-spacing: 1px; }
+  .toggle-label.paid   { color: var(--green); }
+  .toggle-label.unpaid { color: var(--red); }
+
+  /* Password cell */
+  .pw-cell { display: flex; align-items: center; gap: 8px; }
+  .pw-input {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font-body); font-size: .82rem; padding: 6px 10px;
+    border-radius: 2px; outline: none; width: 110px; transition: border-color .15s;
+  }
+  .pw-input:focus { border-color: var(--yellow); }
+  .save-pw-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: var(--font-body); font-size: .72rem; letter-spacing: 1px;
+    padding: 6px 10px; border-radius: 2px; cursor: pointer; transition: all .15s;
+    white-space: nowrap;
+  }
+  .save-pw-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 32px; right: 32px;
+    background: var(--surface); border: 1px solid var(--green);
+    color: var(--green); font-size: .8rem; letter-spacing: 1.5px;
+    padding: 12px 22px; border-radius: 3px;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Loader / error */
+  .loader { display:flex; align-items:center; justify-content:center; height:260px; flex-direction:column; gap:16px; }
+  .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--red); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loader-text { color:var(--muted); font-size:.8rem; letter-spacing:2px; }
+  .error-box { background:rgba(229,9,20,.08); border:1px solid rgba(229,9,20,.3); border-radius:4px; padding:20px 24px; color:var(--muted); font-size:.85rem; line-height:1.6; }
+  .error-box strong { color:var(--red); display:block; margin-bottom:6px; }
+
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .table-wrap { animation: fadeIn .35s ease; }
+
+  @media (max-width: 700px) {
+    header { padding: 14px 20px; }
+    #dashboard-page { padding: 28px 20px; }
+    .table-head { display: none; }
+    .user-row { grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+    .summary-strip { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PAY<span>TRACK</span></div>
+  <div class="admin-badge">ADMIN PANEL</div>
+</header>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">ADMIN LOGIN</div>
+    <div class="login-sub">Enter your admin password to continue</div>
+    <div class="input-wrap">
+      <input type="password" id="admin-pw" placeholder="Password" autocomplete="off">
+    </div>
+    <button class="login-btn" id="login-btn">ENTER</button>
+    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-page">
+  <div class="dash-header">
+    <div class="dash-title">PAYMENT DASHBOARD</div>
+    <div class="dash-sub" id="dash-sub">Loading...</div>
+  </div>
+  <div class="summary-strip">
+    <div class="sum-box"><div class="sum-label">Total Members</div><div class="sum-val white" id="s-total">—</div></div>
+    <div class="sum-box"><div class="sum-label">Paid</div><div class="sum-val green" id="s-paid">—</div></div>
+    <div class="sum-box"><div class="sum-label">Unpaid</div><div class="sum-val red" id="s-unpaid">—</div></div>
+  </div>
+  <div id="table-area">
+    <div class="loader"><div class="spinner"></div><div class="loader-text">LOADING MEMBERS</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── Firebase ───────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAY8V-Gz36ke0oLaxovzmUW3Uic69QEeOM",
+  authDomain: "boi-linopod.firebaseapp.com",
+  projectId: "boi-linopod",
+  storageBucket: "boi-linopod.firebasestorage.app",
+  messagingSenderId: "219749551037",
+  appId: "1:219749551037:web:06ab9fb62a79f7a4c0e0d4",
+  measurementId: "G-CESMEGMT3L"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const DEFAULT_USERS = ["Boi","Mari","Tepen","Nani","Liu"];
+const MONTHLY_FEE   = 11;
+const ADMIN_PASSWORD = "admin123"; // ← Change this to your admin password
+
+// ── Login ──────────────────────────────────────────
+document.getElementById('admin-pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') attemptLogin();
+});
+document.getElementById('login-btn').addEventListener('click', attemptLogin);
+
+function attemptLogin() {
+  const val = document.getElementById('admin-pw').value;
+  if (val === ADMIN_PASSWORD) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('dashboard-page').classList.add('active');
+    loadDashboard();
+  } else {
+    document.getElementById('login-error').classList.add('show');
+    document.getElementById('admin-pw').value = '';
+    setTimeout(() => document.getElementById('login-error').classList.remove('show'), 3000);
+  }
+}
+
+// ── Fetch users ────────────────────────────────────
+async function fetchUsers() {
+  const snap = await getDocs(collection(db, "users"));
+  const map  = {};
+  snap.docs.forEach(d => { map[d.id] = { id: d.id, ...d.data() }; });
+  return DEFAULT_USERS.map(n => map[n.toLowerCase()]).filter(Boolean);
+}
+
+// ── Update paid status ─────────────────────────────
+async function setPaid(userId, value) {
+  await updateDoc(doc(db, "users", userId), { paid: value });
+}
+
+// ── Update password ────────────────────────────────
+async function setPassword(userId, password) {
+  await updateDoc(doc(db, "users", userId), { password });
+}
+
+// ── Toast ──────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── Month label ────────────────────────────────────
+function monthLabel() {
+  return new Date().toLocaleString('default', { month: 'long', year: 'numeric' }).toUpperCase();
+}
+
+// ── Load Dashboard ─────────────────────────────────
+async function loadDashboard() {
+  document.getElementById('dash-sub').textContent = monthLabel();
+  try {
+    const users = await fetchUsers();
+    renderTable(users);
+  } catch(e) {
+    document.getElementById('table-area').innerHTML =
+      `<div class="error-box"><strong>FIREBASE ERROR</strong>${e.message}</div>`;
+  }
+}
+
+// ── Render Table ───────────────────────────────────
+function renderTable(users) {
+  const paidCount   = users.filter(u => u.paid).length;
+  const unpaidCount = users.length - paidCount;
+
+  document.getElementById('s-total').textContent  = users.length;
+  document.getElementById('s-paid').textContent   = paidCount;
+  document.getElementById('s-unpaid').textContent = unpaidCount;
+
+  const rows = users.map(u => `
+    <div class="user-row" id="row-${u.id}">
+      <div class="user-name-cell">
+        <div class="mini-avatar">${u.name[0].toUpperCase()}</div>
+        <div class="user-name">${u.name}</div>
+      </div>
+      <div class="amount-cell">RM ${MONTHLY_FEE.toFixed(2)}</div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" ${u.paid ? 'checked' : ''} data-id="${u.id}" class="paid-toggle">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label ${u.paid ? 'paid' : 'unpaid'}" id="lbl-${u.id}">
+          ${u.paid ? 'PAID' : 'UNPAID'}
+        </span>
+      </div>
+      <div class="pw-cell">
+        <input class="pw-input" type="text" placeholder="Password" value="${u.password || ''}" data-id="${u.id}" id="pw-${u.id}">
+        <button class="save-pw-btn" data-id="${u.id}">SAVE</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('table-area').innerHTML = `
+    <div class="table-wrap">
+      <div class="table-head">
+        <span>Member</span>
+        <span>Amount</span>
+        <span>Payment Status</span>
+        <span>Password</span>
+      </div>
+      ${rows}
+    </div>
+  `;
+
+  // ── Toggle listeners ───────────────────────────
+  document.querySelectorAll('.paid-toggle').forEach(toggle => {
+    toggle.addEventListener('change', async () => {
+      const id    = toggle.dataset.id;
+      const paid  = toggle.checked;
+      const label = document.getElementById(`lbl-${id}`);
+      try {
+        await setPaid(id, paid);
+        label.textContent = paid ? 'PAID' : 'UNPAID';
+        label.className = `toggle-label ${paid ? 'paid' : 'unpaid'}`;
+        // update summary
+        const allToggles = document.querySelectorAll('.paid-toggle');
+        const paidNow    = [...allToggles].filter(t => t.checked).length;
+        document.getElementById('s-paid').textContent   = paidNow;
+        document.getElementById('s-unpaid').textContent = allToggles.length - paidNow;
+        toast(`${id.charAt(0).toUpperCase() + id.slice(1)} marked as ${paid ? 'PAID ✓' : 'UNPAID'}`);
+      } catch(e) {
+        toast('Error: ' + e.message);
+        toggle.checked = !paid; // revert
+      }
+    });
+  });
+
+  // ── Password save listeners ────────────────────
+  document.querySelectorAll('.save-pw-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id  = btn.dataset.id;
+      const val = document.getElementById(`pw-${id}`).value.trim();
+      if (!val) { toast('Password cannot be empty'); return; }
+      try {
+        await setPassword(id, val);
+        toast(`Password saved for ${id.charAt(0).toUpperCase() + id.slice(1)} ✓`);
+      } catch(e) {
+        toast('Error: ' + e.message);
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>
