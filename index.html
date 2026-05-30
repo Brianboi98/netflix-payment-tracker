@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E50914;
+    --red-dark: #B20710;
+    --red-glow: rgba(229,9,20,0.35);
+    --bg: #141414;
+    --surface: #1f1f1f;
+    --border: #333;
+    --text: #e5e5e5;
+    --muted: #808080;
+    --green: #46d369;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+
+  header {
+    display: flex; align-items: center; padding: 18px 48px;
+    background: linear-gradient(180deg, rgba(0,0,0,.85) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .logo { font-family: var(--font-display); font-size: 2rem; letter-spacing: 4px; color: var(--red); text-shadow: 0 0 24px var(--red-glow); }
+  .logo span { color: var(--text); }
+
+  .page { display: none; animation: fadeIn .3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  /* HOME */
+  #home { padding: 60px 48px; }
+  .section-label { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 3px; color: var(--muted); margin-bottom: 32px; }
+  .profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 24px; max-width: 900px; }
+  .profile-card {
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 16px;
+    padding: 36px 20px 28px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; transition: transform .2s, border-color .2s, box-shadow .2s; position: relative; overflow: hidden;
+  }
+  .profile-card::before { content:''; position:absolute; inset:0; background: linear-gradient(135deg, var(--red-glow) 0%, transparent 60%); opacity:0; transition: opacity .25s; }
+  .profile-card:hover { transform: translateY(-6px) scale(1.02); border-color: var(--red); box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+  .profile-card:hover::before { opacity:1; }
+  .avatar { width:72px; height:72px; border-radius:4px; background: var(--red); display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-size:2rem; color:#fff; box-shadow: 0 4px 16px rgba(229,9,20,.4); position:relative; z-index:1; }
+  .profile-name { font-size:.95rem; font-weight:600; color: var(--text); position:relative; z-index:1; }
+  .profile-badge { font-size:.7rem; font-weight:600; letter-spacing:1px; padding:3px 12px; border-radius:2px; position:relative; z-index:1; }
+  .badge-paid   { background: rgba(70,211,105,.15); color: var(--green); }
+  .badge-unpaid { background: rgba(229,9,20,.15);   color: var(--red); }
+
+  /* DETAIL */
+  #detail { padding: 48px 48px; }
+  .back-btn { display:inline-flex; align-items:center; gap:8px; background:none; border:1px solid var(--border); color:var(--muted); font-family:var(--font-body); font-size:.85rem; padding:8px 18px; border-radius:2px; cursor:pointer; transition:all .2s; margin-bottom:40px; letter-spacing:.5px; }
+  .back-btn:hover { border-color: var(--red); color: var(--text); }
+
+  .detail-hero { display:flex; align-items:center; gap:28px; margin-bottom:40px; }
+  .detail-avatar { width:88px; height:88px; border-radius:4px; background:var(--red); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:2.8rem; color:#fff; box-shadow: 0 6px 32px rgba(229,9,20,.5); flex-shrink:0; }
+  .detail-name { font-family:var(--font-display); font-size:3.2rem; letter-spacing:3px; line-height:1; }
+  .detail-sub  { color:var(--muted); font-size:.85rem; margin-top:6px; }
+
+  /* Payment card */
+  .payment-card {
+    max-width: 480px;
+    background: var(--surface); border: 1px solid var(--border); border-radius:4px;
+    overflow: hidden;
+  }
+  .payment-card-header {
+    background: rgba(255,255,255,.03);
+    padding: 16px 24px;
+    font-family: var(--font-display); font-size:1rem; letter-spacing:3px; color:var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .payment-card-body {
+    padding: 28px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .payment-month { font-family: var(--font-display); font-size:1.5rem; letter-spacing:2px; }
+  .payment-amount-wrap { text-align: right; }
+  .payment-amount { font-family: var(--font-display); font-size:2.4rem; letter-spacing:1px; }
+  .amount-paid   { color: var(--green); }
+  .amount-unpaid { color: var(--red); }
+  .payment-label { font-size:.7rem; letter-spacing:2px; color:var(--muted); margin-top:4px; }
+
+  .status-bar {
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 10px;
+    border-top: 1px solid var(--border);
+    font-size:.8rem; font-weight:600; letter-spacing:1.5px;
+  }
+  .status-bar.paid   { background: rgba(70,211,105,.06); color: var(--green); }
+  .status-bar.unpaid { background: rgba(229,9,20,.06);   color: var(--red); }
+  .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .paid   .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .unpaid .status-dot { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+
+  /* Password reveal */
+  .pw-section { max-width: 480px; margin-top: 16px; }
+  .pw-btn {
+    width: 100%; padding: 14px 24px;
+    background: none; border: 1px solid var(--green);
+    color: var(--green); font-family: var(--font-display);
+    font-size: 1rem; letter-spacing: 3px; cursor: pointer;
+    border-radius: 4px; transition: background .2s, color .2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .pw-btn:hover { background: rgba(70,211,105,.1); }
+  .pw-reveal {
+    display: none; background: var(--surface); border: 1px solid var(--green);
+    border-top: none; border-radius: 0 0 4px 4px;
+    padding: 20px 24px; text-align: center;
+    animation: fadeIn .25s ease;
+  }
+  .pw-reveal.open { display: block; }
+  .pw-label { font-size:.7rem; letter-spacing:2px; color:var(--muted); margin-bottom:10px; text-transform:uppercase; }
+  .pw-value {
+    font-family: var(--font-display); font-size: 2rem; letter-spacing: 6px;
+    color: var(--green); text-shadow: 0 0 16px rgba(70,211,105,.4);
+  }
+
+  /* loader / error */
+  .loader { display:flex; align-items:center; justify-content:center; height:260px; flex-direction:column; gap:16px; }
+  .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--red); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loader-text { color:var(--muted); font-size:.8rem; letter-spacing:2px; }
+  .error-box { background:rgba(229,9,20,.08); border:1px solid rgba(229,9,20,.3); border-radius:4px; padding:20px 24px; color:var(--muted); font-size:.85rem; line-height:1.6; }
+  .error-box strong { color:var(--red); display:block; margin-bottom:6px; }
+
+  @media (max-width:640px) {
+    header { padding:14px 20px; }
+    #home, #detail { padding:32px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PAY<span>TRACK</span></div>
+</header>
+
+<div class="page active" id="home">
+  <div id="home-content">
+    <div style="padding:60px 48px">
+      <div class="loader"><div class="spinner"></div><div class="loader-text">LOADING PROFILES</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="detail">
+  <div style="padding:48px 48px">
+    <button class="back-btn" id="back-btn">← BACK TO PROFILES</button>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAY8V-Gz36ke0oLaxovzmUW3Uic69QEeOM",
+  authDomain: "boi-linopod.firebaseapp.com",
+  projectId: "boi-linopod",
+  storageBucket: "boi-linopod.firebasestorage.app",
+  messagingSenderId: "219749551037",
+  appId: "1:219749551037:web:06ab9fb62a79f7a4c0e0d4",
+  measurementId: "G-CESMEGMT3L"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const DEFAULT_USERS = ["Boi","Mari","Tepen","Nani","Liu"];
+const MONTHLY_FEE   = 11;
+
+// ── Seed users ─────────────────────────────────────
+async function seedUsers() {
+  for (const name of DEFAULT_USERS) {
+    const ref  = doc(db, "users", name.toLowerCase());
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, { name, paid: false });
+    }
+  }
+}
+
+// ── Fetch all users ────────────────────────────────
+async function fetchUsers() {
+  const snap = await getDocs(collection(db, "users"));
+  const map  = {};
+  snap.docs.forEach(d => { map[d.id] = { id: d.id, ...d.data() }; });
+  return DEFAULT_USERS.map(n => map[n.toLowerCase()]).filter(Boolean);
+}
+
+// ── Fetch one user ─────────────────────────────────
+async function fetchUser(id) {
+  const snap = await getDoc(doc(db, "users", id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// ── Helpers ────────────────────────────────────────
+function monthLabel() {
+  return new Date().toLocaleString('default', { month:'long', year:'numeric' }).toUpperCase();
+}
+function show(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+}
+
+// ── Render Home ────────────────────────────────────
+async function renderHome() {
+  const wrap = document.getElementById('home-content');
+  wrap.innerHTML = `<div style="padding:60px 48px"><div class="loader"><div class="spinner"></div><div class="loader-text">LOADING PROFILES</div></div></div>`;
+  try {
+    const users = await fetchUsers();
+    const cards = users.map(u => {
+      const paid = u.paid === true;
+      return `
+        <div class="profile-card" data-id="${u.id}">
+          <div class="avatar">${u.name[0].toUpperCase()}</div>
+          <div class="profile-name">${u.name}</div>
+          <span class="profile-badge ${paid ? 'badge-paid' : 'badge-unpaid'}">${paid ? 'PAID' : 'UNPAID'}</span>
+        </div>`;
+    }).join('');
+    wrap.innerHTML = `<div style="padding:60px 48px"><p class="section-label">— SELECT MEMBER —</p><div class="profiles-grid">${cards}</div></div>`;
+    wrap.querySelectorAll('.profile-card').forEach(card => {
+      card.addEventListener('click', () => openUser(card.dataset.id));
+    });
+  } catch(e) {
+    wrap.innerHTML = `<div style="padding:60px 48px"><div class="error-box"><strong>CONNECTION ERROR</strong>${e.message}</div></div>`;
+  }
+}
+
+// ── Open User ──────────────────────────────────────
+async function openUser(id) {
+  show('detail');
+  document.getElementById('detail-content').innerHTML = `<div class="loader"><div class="spinner"></div><div class="loader-text">LOADING</div></div>`;
+  try {
+    const user = await fetchUser(id);
+    renderDetail(user);
+  } catch(e) {
+    document.getElementById('detail-content').innerHTML = `<div class="error-box"><strong>ERROR</strong>${e.message}</div>`;
+  }
+}
+
+// ── Render Detail ──────────────────────────────────
+function renderDetail(user) {
+  const paid      = user.paid === true;
+  const statusCls = paid ? 'paid' : 'unpaid';
+  const statusTxt = paid ? 'PAYMENT RECEIVED' : 'PAYMENT PENDING';
+  const password  = user.password || '—';
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-avatar">${user.name[0].toUpperCase()}</div>
+      <div>
+        <div class="detail-name">${user.name.toUpperCase()}</div>
+        <div class="detail-sub">${monthLabel()}</div>
+      </div>
+    </div>
+
+    <div class="payment-card">
+      <div class="payment-card-header">MONTHLY PAYMENT</div>
+      <div class="payment-card-body">
+        <div class="payment-month">${new Date().toLocaleString('default',{month:'long'}).toUpperCase()}</div>
+        <div class="payment-amount-wrap">
+          <div class="payment-amount ${paid ? 'amount-paid' : 'amount-unpaid'}">RM ${MONTHLY_FEE.toFixed(2)}</div>
+          <div class="payment-label">${paid ? 'PAID' : 'NOT PAID'}</div>
+        </div>
+      </div>
+      <div class="status-bar ${statusCls}">
+        <div class="status-dot"></div>
+        ${statusTxt}
+      </div>
+    </div>
+
+    ${paid ? `
+    <div class="pw-section">
+      <button class="pw-btn" id="pw-btn">🔑 REVEAL PASSWORD</button>
+      <div class="pw-reveal" id="pw-reveal">
+        <div class="pw-label">Your Access Password</div>
+        <div class="pw-value">${password}</div>
+      </div>
+    </div>` : ''}
+  `;
+
+  if (paid) {
+    document.getElementById('pw-btn').addEventListener('click', () => {
+      const reveal = document.getElementById('pw-reveal');
+      const btn    = document.getElementById('pw-btn');
+      const open   = reveal.classList.toggle('open');
+      btn.textContent = open ? '🔒 HIDE PASSWORD' : '🔑 REVEAL PASSWORD';
+    });
+  }
+}
+
+// ── Back button ────────────────────────────────────
+document.getElementById('back-btn').addEventListener('click', async () => {
+  show('home');
+  await renderHome();
+});
+
+// ── Boot ───────────────────────────────────────────
+try {
+  await seedUsers();
+  await renderHome();
+} catch(e) {
+  document.getElementById('home-content').innerHTML =
+    `<div style="padding:60px 48px"><div class="error-box"><strong>FIREBASE ERROR</strong>${e.message}<br><br>Make sure Firestore is enabled and security rules allow read/write.</div></div>`;
+}
+</script>
+</body>
+</html>
