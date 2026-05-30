@@ -117,9 +117,21 @@
   .pw-reveal.open { display: block; }
   .pw-label { font-size:.7rem; letter-spacing:2px; color:var(--muted); margin-bottom:10px; text-transform:uppercase; }
   .pw-value {
+    margin-bottom: 16px;
     font-family: var(--font-display); font-size: 2rem; letter-spacing: 6px;
     color: var(--green); text-shadow: 0 0 16px rgba(70,211,105,.4);
+    margin-bottom: 16px;
   }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: none; border: 1px solid rgba(70,211,105,.4);
+    color: var(--green); font-family: var(--font-body);
+    font-size: .75rem; font-weight: 600; letter-spacing: 1.5px;
+    padding: 8px 20px; border-radius: 2px; cursor: pointer;
+    transition: background .2s, border-color .2s;
+  }
+  .copy-btn:hover { background: rgba(70,211,105,.1); border-color: var(--green); }
+  .copy-btn.copied { color: #fff; background: rgba(70,211,105,.25); border-color: var(--green); }
 
   /* loader / error */
   .loader { display:flex; align-items:center; justify-content:center; height:260px; flex-direction:column; gap:16px; }
@@ -283,6 +295,9 @@ function renderDetail(user) {
       <div class="pw-reveal" id="pw-reveal">
         <div class="pw-label">Your Access Password</div>
         <div class="pw-value">${password}</div>
+        <button class="copy-btn" id="copy-btn">
+          <span>⎘</span> COPY PASSWORD
+        </button>
       </div>
     </div>` : ''}
   `;
@@ -293,6 +308,18 @@ function renderDetail(user) {
       const btn    = document.getElementById('pw-btn');
       const open   = reveal.classList.toggle('open');
       btn.textContent = open ? '🔒 HIDE PASSWORD' : '🔑 REVEAL PASSWORD';
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      const copyBtn = document.getElementById('copy-btn');
+      navigator.clipboard.writeText(password).then(() => {
+        copyBtn.textContent = '✓ COPIED!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.innerHTML = '<span>⎘</span> COPY PASSWORD';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      });
     });
   }
 }
